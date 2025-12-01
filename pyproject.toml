@@ -1,0 +1,4 @@
+[tool.uv.workspace]
+members = ["aoc2k25"]
+
+
