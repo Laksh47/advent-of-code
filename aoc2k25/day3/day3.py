@@ -4,14 +4,24 @@ from pathlib import Path
 # https://adventofcode.com/2025/day/3
 
 
-def get_largest_joltage(bank: str):
-    max_joltage = 0
-    for i in range(len(bank)):
-        for j in range(i + 1, len(bank)):
-            joltage = int(bank[i] + bank[j])
-            if joltage > max_joltage:
-                max_joltage = joltage
-    return max_joltage
+def get_largest_joltage(bank: str, num_batteries: int = 12):
+    stack = []
+    batteries_to_remove = len(bank) - num_batteries
+    for battery in bank:
+        if not stack:
+            stack.append(battery)
+            continue
+
+        while stack and stack[-1] < battery and batteries_to_remove:
+            stack.pop()
+            batteries_to_remove -= 1
+
+        stack.append(battery)
+
+    if batteries_to_remove:
+        stack = stack[:-batteries_to_remove]
+
+    return int("".join(stack))
 
 
 def main(filename: str = "input_test.txt"):
