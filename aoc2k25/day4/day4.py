@@ -3,6 +3,7 @@ from pathlib import Path
 from copy import deepcopy
 # https://adventofcode.com/2025/day/4
 
+
 def can_access_roll(matrix: list[list[str]], row: int, col: int):
     count = 0
     offsets = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
@@ -15,6 +16,20 @@ def can_access_roll(matrix: list[list[str]], row: int, col: int):
                 count += 1
     return count < 4
 
+
+def remove_roll(matrix: list[list[str]]):
+    new_matrix = deepcopy(matrix)
+
+    count = 0
+    for row in range(len(matrix)):
+        for col in range(len(matrix[0])):
+            if matrix[row][col] == "@" and can_access_roll(matrix, row, col):
+                new_matrix[row][col] = "x"
+                count += 1
+
+    return new_matrix, count
+
+
 def main(filename: str = "input_test.txt"):
     print(f"Processing file: {filename}")
     base_dir = Path(__file__).resolve().parent
@@ -22,18 +37,17 @@ def main(filename: str = "input_test.txt"):
 
     with open(file_path, "r") as file:
         matrix = [list(line.strip()) for line in file if line.strip()]
-    
-    # new_matrix = deepcopy(matrix)
 
-    count = 0
-    for row in range(len(matrix)):
-        for col in range(len(matrix[0])):
-            if matrix[row][col] == "@" and can_access_roll(matrix, row, col):
-                # new_matrix[row][col] = "x"
-                count += 1
-                
-    # print("\n".join(["".join(row) for row in new_matrix]))
-    print(f"The number of rolls of paper that can be accessed by a forklift is {count}")
+    total_count = 0
+    while True:
+        new_matrix, count = remove_roll(matrix)
+        if count == 0:
+            break
+
+        matrix = new_matrix
+        total_count += count
+
+    print(f"The number of rolls of paper that can be accessed by a forklift is {total_count}")
 
 
 if __name__ == "__main__":
