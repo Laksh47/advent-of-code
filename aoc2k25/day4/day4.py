@@ -1,8 +1,19 @@
 import sys
 from pathlib import Path
-
+from copy import deepcopy
 # https://adventofcode.com/2025/day/4
 
+def can_access_roll(matrix: list[list[str]], row: int, col: int):
+    count = 0
+    offsets = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
+
+    for offset in offsets:
+        new_row = row + offset[0]
+        new_col = col + offset[1]
+        if 0 <= new_row < len(matrix) and 0 <= new_col < len(matrix[0]):
+            if matrix[new_row][new_col] == "@":
+                count += 1
+    return count < 4
 
 def main(filename: str = "input_test.txt"):
     print(f"Processing file: {filename}")
@@ -10,16 +21,19 @@ def main(filename: str = "input_test.txt"):
     file_path = base_dir / filename
 
     with open(file_path, "r") as file:
-        lines = file.readlines()
+        matrix = [list(line.strip()) for line in file if line.strip()]
+    
+    # new_matrix = deepcopy(matrix)
 
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        # Process each line here
-        print(f"Processing: {line}")
-
-    print("Result: ")
+    count = 0
+    for row in range(len(matrix)):
+        for col in range(len(matrix[0])):
+            if matrix[row][col] == "@" and can_access_roll(matrix, row, col):
+                # new_matrix[row][col] = "x"
+                count += 1
+                
+    # print("\n".join(["".join(row) for row in new_matrix]))
+    print(f"The number of rolls of paper that can be accessed by a forklift is {count}")
 
 
 if __name__ == "__main__":
