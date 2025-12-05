@@ -11,6 +11,21 @@ def is_spoiled(fresh_ingredient_ranges, ingredient):
 
     return True
 
+def merge(intervals):
+    intervals.sort()
+    merged = []
+    prev = intervals[0]
+
+    for i in range(1, len(intervals)):
+        if intervals[i][0] <= prev[1]:
+            prev[1] = max(prev[1], intervals[i][1])
+        else:
+            merged.append(prev)
+            prev = intervals[i]
+
+    merged.append(prev)
+    return merged
+
 
 def main(filename: str = "input_test.txt"):
     print(f"Processing file: {filename}")
@@ -33,7 +48,7 @@ def main(filename: str = "input_test.txt"):
         if not seen_empty_line:
             # Parse range format: "start-end" and add as tuple
             start, end = map(int, line.split("-"))
-            fresh_ingredient_ranges.append((start, end))
+            fresh_ingredient_ranges.append([start, end])
         else:
             # Add ingredient (just a number)
             ingredients.append(int(line))
@@ -49,6 +64,14 @@ def main(filename: str = "input_test.txt"):
 
     print(f"Fresh ingredients count: {count}")
 
+    fresh_ingredient_ranges = merge(fresh_ingredient_ranges)
+
+    # part two
+    id_count = 0
+    for (start, end) in fresh_ingredient_ranges:
+        id_count += (end - start) + 1
+
+    print(f"Total ID count: {id_count}")
 
 if __name__ == "__main__":
     # If a filename is provided as the first CLI argument, use it; otherwise use the default.
