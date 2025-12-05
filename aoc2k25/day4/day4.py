@@ -17,7 +17,7 @@ def can_access_roll(matrix: list[list[str]], row: int, col: int):
     return count < 4
 
 
-def remove_roll(matrix: list[list[str]]):
+def remove_rolls(matrix: list[list[str]]):
     new_matrix = deepcopy(matrix)
 
     count = 0
@@ -40,7 +40,7 @@ def main(filename: str = "input_test.txt"):
 
     total_count = 0
     while True:
-        new_matrix, count = remove_roll(matrix)
+        new_matrix, count = remove_rolls(matrix)
         if count == 0:
             break
 
