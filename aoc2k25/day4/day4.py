@@ -1,6 +1,7 @@
 import sys
-from pathlib import Path
 from copy import deepcopy
+from pathlib import Path
+
 # https://adventofcode.com/2025/day/4
 
 
