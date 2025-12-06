@@ -11,6 +11,7 @@ def is_spoiled(fresh_ingredient_ranges, ingredient):
 
     return True
 
+
 def merge(intervals):
     intervals.sort()
     merged = []
@@ -68,10 +69,11 @@ def main(filename: str = "input_test.txt"):
 
     # part two
     id_count = 0
-    for (start, end) in fresh_ingredient_ranges:
+    for start, end in fresh_ingredient_ranges:
         id_count += (end - start) + 1
 
     print(f"Total ID count: {id_count}")
+
 
 if __name__ == "__main__":
     # If a filename is provided as the first CLI argument, use it; otherwise use the default.
