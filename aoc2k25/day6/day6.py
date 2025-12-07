@@ -29,7 +29,7 @@ def parse_file(file_path: Path) -> dict:
     return result
 
 
-def apply_operators(data: dict, left_to_right: bool = False) -> dict:
+def apply_operators(data: dict) -> dict:
     """Apply the operator (last value) to the rest of the list for each column."""
     operator_map = {"+": operator.add, "*": operator.mul}
 
@@ -40,9 +40,6 @@ def apply_operators(data: dict, left_to_right: bool = False) -> dict:
 
         op_str = str(values[-1])
         numbers = values[:-1]
-
-        if left_to_right:
-            numbers = transform(numbers)
 
         if op_str not in operator_map:
             print(f"Warning: Unknown operator '{op_str}' in line[{key}]")
