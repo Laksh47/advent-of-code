@@ -3,6 +3,11 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
+OPERATORS_MAP = {
+    "+": operator.add,
+    "*": operator.mul,
+}
+
 
 def get_simplified_column_ranges(pattern_line: str) -> List[Tuple[int, int]]:
     """
@@ -17,7 +22,7 @@ def get_simplified_column_ranges(pattern_line: str) -> List[Tuple[int, int]]:
     Returns:
         A list of (start_index, end_index) tuples for string slicing.
     """
-    operators = ("*", "+")
+    operators = OPERATORS_MAP.keys()
     column_ranges: List[Tuple[int, int]] = []
     current_content_start = 0
 
@@ -60,12 +65,7 @@ def parse_right_to_left(nums_as_str):
 
 
 def apply_operation(op, operands):
-    op_map = {
-        "+": operator.add,
-        "*": operator.mul,
-    }
-
-    func = op_map[op]
+    func = OPERATORS_MAP[op]
     res = operands[0]
     for x in operands[1:]:
         res = func(res, x)
