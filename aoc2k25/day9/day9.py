@@ -1,141 +1,138 @@
 import sys
-from itertools import combinations
 from pathlib import Path
-
-# https://adventofcode.com/2025/day/9
-
-# --- Geometry Helpers for Part 2 ---
 
 
 def is_point_in_polygon(x, y, poly_edges):
     """
-    Ray Casting Algorithm: Checks if point (x,y) is inside the polygon.
-    Returns True if inside, False if outside.
+    Ray casting algorithm: checks if point (x,y) is inside the polygon.
+    Counts how many times a ray going right from (x,y) crosses polygon edges.
+    Odd = inside, Even = outside.
     """
     collisions = 0
     for (x1, y1), (x2, y2) in poly_edges:
-        # Check if the ray (moving right from x,y) crosses this vertical edge
+        # Only consider vertical edges (x1 == x2)
         if x1 == x2:
-            # Check if edge spans our y-coord
+            # Check if edge spans our y-coordinate
             if min(y1, y2) <= y < max(y1, y2):
-                # Check if edge is strictly to the right
+                # Check if edge is to the right of our point
                 if x1 > x:
                     collisions += 1
+
     return collisions % 2 == 1
 
 
 def edge_intersects_rect_interior(edge, rect):
     """
-    Checks if a polygon edge slices strictly through the INTERIOR of the rectangle.
-    Touching the boundary of the rectangle is allowed and valid.
+    Checks if a polygon edge cuts through the INTERIOR of the rectangle.
+    Touching the boundary is allowed (returns False).
+    Only cutting through the interior is invalid (returns True).
     """
     (ex1, ey1), (ex2, ey2) = edge
     rx_min, rx_max, ry_min, ry_max = rect
 
-    # If edge is vertical
+    # Case 1: Vertical edge
     if ex1 == ex2:
-        # Edge X must be strictly inside Rect X bounds
+        # Edge X must be STRICTLY inside rectangle X bounds
         if rx_min < ex1 < rx_max:
-            # Edge Y interval must overlap Rect Y interval
-            if max(min(ey1, ey2), ry_min) < min(max(ey1, ey2), ry_max):
+            # Edge Y interval must overlap with rectangle Y interval
+            edge_y_min = min(ey1, ey2)
+            edge_y_max = max(ey1, ey2)
+            overlap_start = max(edge_y_min, ry_min)
+            overlap_end = min(edge_y_max, ry_max)
+            if overlap_start < overlap_end:
                 return True
 
-    # If edge is horizontal
+    # Case 2: Horizontal edge
     elif ey1 == ey2:
-        # Edge Y must be strictly inside Rect Y bounds
+        # Edge Y must be STRICTLY inside rectangle Y bounds
         if ry_min < ey1 < ry_max:
-            # Edge X interval must overlap Rect X interval
-            if max(min(ex1, ex2), rx_min) < min(max(ex1, ex2), rx_max):
+            # Edge X interval must overlap with rectangle X interval
+            edge_x_min = min(ex1, ex2)
+            edge_x_max = max(ex1, ex2)
+            overlap_start = max(edge_x_min, rx_min)
+            overlap_end = min(edge_x_max, rx_max)
+            if overlap_start < overlap_end:
                 return True
 
     return False
 
 
-# --- Part Solvers ---
-
-
 def solve_part1(red_tiles):
-    """
-    Finds the largest rectangle defined by any two red tiles.
-    No restrictions on what lies between them.
-    """
+    """Find largest rectangle with red tiles at opposite corners."""
     max_area = 0
 
-    for tile_a, tile_b in combinations(red_tiles, 2):
-        x1, y1 = tile_a
-        x2, y2 = tile_b
+    # Check all pairs of red tiles
+    for i in range(len(red_tiles)):
+        for j in range(i + 1, len(red_tiles)):
+            x1, y1 = red_tiles[i]
+            x2, y2 = red_tiles[j]
 
-        # Inclusive Area = (Diff + 1) * (Diff + 1)
-        width = abs(x1 - x2) + 1
-        height = abs(y1 - y2) + 1
-        area = width * height
-
-        if area > max_area:
-            max_area = area
+            # They must be diagonal (different x AND different y)
+            if x1 != x2 and y1 != y2:
+                width = abs(x2 - x1) + 1
+                height = abs(y2 - y1) + 1
+                area = width * height
+                max_area = max(max_area, area)
 
     return max_area
 
 
 def solve_part2(red_tiles):
-    """
-    Finds the largest rectangle that is completely CONTAINED within
-    the polygon formed by the red tiles.
-    """
-    # 1. Build Polygon Edges (Connect points in order)
+    """Find largest rectangle using only red and green tiles."""
+
+    # Build polygon edges (connecting consecutive red tiles)
     poly_edges = []
-    num_tiles = len(red_tiles)
-    for i in range(num_tiles):
+    n = len(red_tiles)
+    for i in range(n):
         p1 = red_tiles[i]
-        p2 = red_tiles[(i + 1) % num_tiles]  # Wrap to start
+        p2 = red_tiles[(i + 1) % n]  # Wrap around
         poly_edges.append((p1, p2))
 
     max_area = 0
 
-    # 2. Check every pair
-    for tile_a, tile_b in combinations(red_tiles, 2):
-        x1, y1 = tile_a
-        x2, y2 = tile_b
+    # Check all pairs of red tiles
+    for i in range(len(red_tiles)):
+        for j in range(i + 1, len(red_tiles)):
+            x1, y1 = red_tiles[i]
+            x2, y2 = red_tiles[j]
 
-        rx_min, rx_max = min(x1, x2), max(x1, x2)
-        ry_min, ry_max = min(y1, y2), max(y1, y2)
-
-        width = (rx_max - rx_min) + 1
-        height = (ry_max - ry_min) + 1
-        area = width * height
-
-        # Optimization: Skip complex checks if area is too small
-        if area <= max_area:
-            continue
-
-        # 3. Validity Checks
-        # Test A: Is the center of the rectangle inside the polygon?
-        mid_x = (rx_min + rx_max) / 2
-        mid_y = (ry_min + ry_max) / 2
-
-        if not is_point_in_polygon(mid_x, mid_y, poly_edges):
-            # Special case: Thin rectangles (width 1) lie on the boundary.
-            # We assume valid if they don't fail Test B.
-            # But strictly, if it's 1-wide, we check if it aligns with an edge.
-            # For simplicity in this puzzle context, usually center check + intersect check is enough.
-            # If center is OUT, we discard unless it's a boundary line case.
-            if width > 1 and height > 1:
+            # They must be diagonal
+            if x1 == x2 or y1 == y2:
                 continue
 
-        # Test B: Does any polygon edge cut through the rectangle?
-        rect_tuple = (rx_min, rx_max, ry_min, ry_max)
-        intersection_found = False
-        for edge in poly_edges:
-            if edge_intersects_rect_interior(edge, rect_tuple):
-                intersection_found = True
-                break
+            # Define rectangle bounds
+            rx_min, rx_max = min(x1, x2), max(x1, x2)
+            ry_min, ry_max = min(y1, y2), max(y1, y2)
 
-        if not intersection_found:
-            max_area = area
+            width = rx_max - rx_min + 1
+            height = ry_max - ry_min + 1
+            area = width * height
+
+            # Optimization: skip if area won't improve our max
+            if area <= max_area:
+                continue
+
+            # Validity Check 1: Is the center of the rectangle inside the polygon?
+            mid_x = (rx_min + rx_max) / 2.0
+            mid_y = (ry_min + ry_max) / 2.0
+
+            if not is_point_in_polygon(mid_x, mid_y, poly_edges):
+                # Special case for thin rectangles on the boundary
+                if width > 1 and height > 1:
+                    continue
+
+            # Validity Check 2: Does any polygon edge cut through the rectangle interior?
+            rect = (rx_min, rx_max, ry_min, ry_max)
+            intersection_found = False
+            for edge in poly_edges:
+                if edge_intersects_rect_interior(edge, rect):
+                    intersection_found = True
+                    break
+
+            if not intersection_found:
+                max_area = area
 
     return max_area
-
-
-# --- Main Execution ---
 
 
 def main(filename: str = "input_test.txt"):
