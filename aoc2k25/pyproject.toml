@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Advent of Code 2025 solutions"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "pulp"
+]
 
 [project.optional-dependencies]
 dev = ["ruff"]
