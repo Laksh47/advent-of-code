@@ -2,20 +2,16 @@ import sys
 from pathlib import Path
 from typing import List, Set, Tuple
 
-try:
-    # Import explicitly to satisfy lint rules and keep namespace clean.
-    from pulp import (
-        PULP_CBC_CMD,
-        LpMinimize,
-        LpProblem,
-        LpStatusOptimal,
-        LpVariable,
-        lpSum,
-        value,
-    )
-except ImportError:
-    print("Please install pulp: pip install pulp")
-    sys.exit(1)
+# Import explicitly to satisfy lint rules and keep namespace clean.
+from pulp import (
+    PULP_CBC_CMD,
+    LpMinimize,
+    LpProblem,
+    LpStatusOptimal,
+    LpVariable,
+    lpSum,
+    value,
+)
 
 # https://adventofcode.com/2025/day/10
 
