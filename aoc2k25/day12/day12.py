@@ -1,10 +1,10 @@
 # save as day12_christmas_both_solvers.py
-import sys
 import re
-from pathlib import Path
-from collections import defaultdict
+import sys
 import time
-import itertools
+from collections import defaultdict
+from pathlib import Path
+
 
 # ---------- Parsing (robust) ----------
 def parse_input(lines):
@@ -54,6 +54,7 @@ def parse_input(lines):
         regions.append((W, H, counts))
     return shapes, regions
 
+
 # ---------- Shape utilities ----------
 def shape_coords_from_rows(rows):
     coords = set()
@@ -63,6 +64,7 @@ def shape_coords_from_rows(rows):
                 coords.add((x, y))
     return coords
 
+
 def normalize(coords):
     xs = [x for x, y in coords]
     ys = [y for x, y in coords]
@@ -70,12 +72,13 @@ def normalize(coords):
     miny = min(ys)
     return tuple(sorted(((x - minx, y - miny) for x, y in coords)))
 
+
 def all_orientations(coords):
     out = set()
     for flip_x in (False, True):
         for rot in (0, 1, 2, 3):
             transformed = []
-            for (x, y) in coords:
+            for x, y in coords:
                 xx, yy = x, y
                 if flip_x:
                     xx = -xx
@@ -85,10 +88,12 @@ def all_orientations(coords):
             out.add(normalize(transformed))
     return list(out)
 
+
 def bbox(coords_tuple):
     xs = [x for x, y in coords_tuple]
     ys = [y for x, y in coords_tuple]
     return max(xs) + 1, max(ys) + 1
+
 
 # ---------- Placement enumeration (returns bitmask placements) ----------
 def placements_bitmasks_for_shape_in_region(orientation_coords, W, H):
@@ -98,17 +103,18 @@ def placements_bitmasks_for_shape_in_region(orientation_coords, W, H):
         for oy in range(0, H - h_s + 1):
             mask = 0
             valid = True
-            for (sx, sy) in orientation_coords:
+            for sx, sy in orientation_coords:
                 cx = ox + sx
                 cy = oy + sy
                 if not (0 <= cx < W and 0 <= cy < H):
                     valid = False
                     break
                 pos = cy * W + cx
-                mask |= (1 << pos)
+                mask |= 1 << pos
             if valid:
                 placements.append(mask)
     return placements
+
 
 def unique_placements_for_shape(sh_rows, W, H):
     coords = shape_coords_from_rows(sh_rows)
@@ -121,6 +127,7 @@ def unique_placements_for_shape(sh_rows, W, H):
                 seen.add(m)
                 placements.append(m)
     return placements
+
 
 # ---------- Bitmask backtracking solver ----------
 def can_pack_bitmask(W, H, shapes, counts, placements_cache=None):
@@ -173,6 +180,7 @@ def can_pack_bitmask(W, H, shapes, counts, placements_cache=None):
 
     # Backtracking:
     sys.setrecursionlimit(10000)
+
     def place_shape_at_index(idx, used_mask):
         if idx == len(order):
             return True
@@ -213,6 +221,7 @@ def can_pack_bitmask(W, H, shapes, counts, placements_cache=None):
 
     return place_shape_at_index(0, 0)
 
+
 # ---------- DLX implementation ----------
 class DLXNode:
     def __init__(self):
@@ -220,11 +229,13 @@ class DLXNode:
         self.col = None
         self.row_id = None
 
+
 class DLXColumn(DLXNode):
     def __init__(self, name):
         super().__init__()
         self.name = name
         self.size = 0  # number of nodes in column
+
 
 class DLX:
     def __init__(self, ncols):
@@ -356,6 +367,7 @@ class DLX:
         self.uncover(col)
         return False
 
+
 def build_exact_cover_model(W, H, shapes, counts):
     """
     Build exact-cover matrix columns:
@@ -365,7 +377,7 @@ def build_exact_cover_model(W, H, shapes, counts):
       For each placement (unique cells set) of shape t create a row that includes:
           - the cell columns (cells occupied)
           - one instance column for that shape (representing "this placement is used to fill that instance")
-      BUT to avoid duplicating placements per instance, we will still create a row for each (placement × instance_column)
+      BUT to avoid duplicating placements per instance, we'll still create a row for each (placement × instance_column)
       (DLX will handle it efficiently)
     Returns: (ncols, list_of_rows, required_instance_cols_set)
     """
@@ -396,7 +408,7 @@ def build_exact_cover_model(W, H, shapes, counts):
                 for oy in range(0, H - h_s + 1):
                     cells = []
                     ok = True
-                    for (sx, sy) in orient:
+                    for sx, sy in orient:
                         cx = ox + sx
                         cy = oy + sy
                         if not (0 <= cx < W and 0 <= cy < H):
@@ -419,6 +431,7 @@ def build_exact_cover_model(W, H, shapes, counts):
         cols.append(inst_col)
         rows_cols.append(cols)
     return next_col, rows_cols, set(instance_cols)
+
 
 def can_pack_dlx(W, H, shapes, counts):
     # quick area check
@@ -449,12 +462,14 @@ def can_pack_dlx(W, H, shapes, counts):
     # We'll pass required_instance_cols directly
     return dlx.search(required_col_indices=required_instance_cols)
 
+
 # ---------- Main runner ----------
 def remap_shapes_to_dense(shapes):
     shape_keys = sorted(shapes.keys())
     key_map = {old: new for new, old in enumerate(shape_keys)}
     shapes_mapped = {new: shapes[old] for old, new in key_map.items()}
     return shapes_mapped, key_map
+
 
 def remap_counts_line(counts_line, key_map, n_shapes):
     # counts_line is aligned with original indices; we must produce a list length n_shapes
@@ -468,6 +483,7 @@ def remap_counts_line(counts_line, key_map, n_shapes):
         else:
             counts.append(0)
     return counts
+
 
 def main(filename="input_test.txt", only=None):
     base_dir = Path(__file__).resolve().parent
@@ -487,7 +503,7 @@ def main(filename="input_test.txt", only=None):
     total_fit_bitmask = 0
     total_fit_dlx = 0
 
-    for (W, H, counts_line) in regions:
+    for W, H, counts_line in regions:
         counts = remap_counts_line(counts_line, key_map, n_shapes)
         print(f"\nRegion {W}x{H} counts={counts}")
 
@@ -498,7 +514,7 @@ def main(filename="input_test.txt", only=None):
         except RecursionError:
             ok_bit = False
         t1 = time.perf_counter()
-        print(f"  Bitmask solver: {'fits' if ok_bit else 'does NOT fit'} (time {t1-t0:.4f}s)")
+        print(f"  Bitmask solver: {'fits' if ok_bit else 'does NOT fit'} (time {t1 - t0:.4f}s)")
         if ok_bit:
             total_fit_bitmask += 1
 
@@ -509,7 +525,7 @@ def main(filename="input_test.txt", only=None):
         t0 = time.perf_counter()
         ok_dlx = can_pack_dlx(W, H, shapes_mapped, counts)
         t1 = time.perf_counter()
-        print(f"  DLX solver:     {'fits' if ok_dlx else 'does NOT fit'} (time {t1-t0:.4f}s)")
+        print(f"  DLX solver:     {'fits' if ok_dlx else 'does NOT fit'} (time {t1 - t0:.4f}s)")
         if ok_dlx:
             total_fit_dlx += 1
 
@@ -518,6 +534,7 @@ def main(filename="input_test.txt", only=None):
     if only != "bitmask":
         print(f"  DLX solver found     {total_fit_dlx} packable regions")
     return total_fit_bitmask, total_fit_dlx
+
 
 # ---------- CLI ----------
 if __name__ == "__main__":
